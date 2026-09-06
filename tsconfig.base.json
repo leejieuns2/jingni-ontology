@@ -1,0 +1,40 @@
+{
+  // Shared base for a "Node runs .ts directly" workflow.
+  // Node >=22.18 strips types at load time — it never transpiles — so tsc is
+  // used purely as a type checker and must forbid anything Node can't erase.
+  "compilerOptions": {
+    // tsc type-checks only; Node is the runtime. Nothing is ever emitted.
+    "noEmit": true,
+    // Imports are written with the real extension: import "./foo.ts"
+    "allowImportingTsExtensions": true,
+
+    // Reject syntax Node's type-stripper cannot erase:
+    // enum, namespace, constructor parameter properties, experimental decorators.
+    "erasableSyntaxOnly": true,
+    // Leave import/export statements exactly as written — no elision surprises.
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+
+    // Node 22 ESM resolution semantics (package.json "type": "module").
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "moduleDetection": "force",
+    "target": "es2024",
+    "lib": ["es2024"],
+    "types": ["node"],
+    "resolveJsonModule": true,
+
+    // Type safety
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true
+  }
+}
