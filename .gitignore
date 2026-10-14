@@ -41,3 +41,13 @@ node_repl_history
 # OS
 .DS_Store
 Thumbs.db
+
+# Course materials (local reference only, not for the repo)
+docs/
+
+# Agent skills - vendored third-party content, reinstall from skills-lock.json
+.agents/
+.claude/skills/
+
+# Skill working output (design critique snapshots)
+.impeccable/

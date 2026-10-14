@@ -1,0 +1,581 @@
+/* Layout only — colours, type and controls come from Blueprint's light theme. */
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--light-gray5);
+  overflow: hidden;
+}
+
+/* Thin app switcher | type rail | content */
+.app-shell {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  height: 100vh;
+}
+
+.app-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 0;
+  background: var(--light-gray4);
+  border-right: 1px solid var(--light-gray2);
+}
+
+.page {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  min-height: 0;
+}
+
+.type-rail {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 12px 8px;
+  background: var(--white);
+  border-right: 1px solid var(--light-gray2);
+  overflow-y: auto;
+}
+
+.type-rail__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px 10px;
+}
+
+.type-rail__title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gray2);
+}
+
+.type-rail__empty {
+  display: flex;
+  justify-content: center;
+  padding: 24px 0;
+}
+
+.page__main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  padding: 24px 28px 40px;
+  overflow-y: auto;
+}
+
+/* Without this, tall children are compressed to fit the column instead of
+   making it scroll, which silently clips table rows. */
+.page__main > * {
+  flex-shrink: 0;
+}
+
+.page__loading {
+  display: flex;
+  justify-content: center;
+  padding: 48px 0;
+}
+
+/* Ontology Manager -------------------------------------------------------- */
+
+.type-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.type-header__icon {
+  margin-top: 6px;
+  color: var(--blue2);
+}
+
+.type-header__name {
+  margin: 0;
+}
+
+.type-header__subtitle {
+  color: var(--gray2);
+  font-size: 13px;
+}
+
+/* Two-column summary card: identity on the left, governance on the right. */
+.type-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 0 28px;
+  padding: 18px 20px;
+}
+
+.fact-list {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fact-list--governance {
+  padding-left: 28px;
+  border-left: 1px solid var(--light-gray2);
+}
+
+@media (max-width: 900px) {
+  .type-summary {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+  }
+
+  .fact-list--governance {
+    padding-left: 0;
+    border-left: none;
+  }
+}
+
+.fact {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.fact dt {
+  color: var(--gray2);
+}
+
+.fact dd {
+  margin: 0;
+  min-width: 0;
+}
+
+.truncate {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
+}
+
+/* Properties and Action types sit side by side, as in the moodboard. */
+.type-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 1100px) {
+  .type-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.section {
+  min-width: 0;
+}
+
+.data-table {
+  width: 100%;
+}
+
+.data-table code {
+  font-size: 12px;
+}
+
+/* inline-flex, not flex: this class also lands on <td>, and making a table cell
+   a flex container breaks its layout. */
+.cell-tags {
+  display: inline-flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  vertical-align: middle;
+}
+
+.action-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.action-meta__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.muted {
+  color: var(--gray2);
+  margin: 0;
+}
+
+/* Object Explorer --------------------------------------------------------- */
+
+.list-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.list-header__title {
+  margin: 0;
+}
+
+.list-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.list-toolbar__switch {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.instance-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.instance-group__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0 0;
+}
+
+.detail-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detail-header__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.detail-header__name {
+  margin: 0;
+}
+
+.action-strip {
+  flex-wrap: wrap;
+}
+
+.detail-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 1100px) {
+  .detail-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.property-list {
+  margin: 0;
+}
+
+.property-list__row {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 16px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--light-gray2);
+}
+
+.property-list__row:last-child {
+  border-bottom: none;
+}
+
+.property-list__row dt {
+  color: var(--gray2);
+}
+
+.property-list__row dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.link-group__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--light-gray2);
+}
+
+.link-group__name {
+  font-weight: 600;
+}
+
+.link-group__empty {
+  padding: 10px 16px;
+}
+
+.link-list {
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+}
+
+.action-dialog .muted {
+  margin-bottom: 14px;
+}
+
+.action-dialog__result {
+  max-height: 220px;
+  margin: 8px 0 0;
+  overflow: auto;
+  font-size: 12px;
+}
+
+/* Batch Investigation Workspace ------------------------------------------- */
+
+.workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
+  min-width: 0;
+  padding: 24px 28px 40px;
+  overflow-y: auto;
+}
+
+.workspace__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.workspace__title {
+  margin: 0;
+}
+
+.metric-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.metric {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+}
+
+.metric__label {
+  display: flex;
+}
+
+.metric__value {
+  font-size: 34px;
+  font-weight: 300;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.metric__value--warning {
+  color: var(--orange2);
+}
+
+.metric__value--danger {
+  color: var(--red2);
+}
+
+.metric__detail {
+  font-size: 12px;
+  color: var(--gray2);
+}
+
+.workspace__columns {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 1200px) {
+  .workspace__columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.workspace__list,
+.workspace__detail {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.workspace__filters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.workspace__switch {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.workspace__placeholder {
+  padding: 24px;
+}
+
+.data-table tbody tr.is-selected > td {
+  background: rgba(45, 114, 210, 0.10);
+}
+
+.data-table tbody tr.is-selected > td:first-child {
+  box-shadow: inset 3px 0 0 var(--blue2);
+}
+
+.cell-inline-tag {
+  margin-left: 6px;
+}
+
+.cell-notes {
+  max-width: 320px;
+  white-space: normal;
+}
+
+.detail-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.detail-panel__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.detail-panel__id {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.detail-panel__note {
+  padding: 8px 16px;
+  font-size: 12px;
+}
+
+.curve {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.curve__point {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px solid var(--light-gray1);
+  border-radius: 3px;
+  font-variant-numeric: tabular-nums;
+}
+
+.curve__point--current {
+  border-color: var(--blue2);
+  background: rgba(45, 114, 210, 0.08);
+}
+
+.curve__day {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--gray2);
+}
+
+.audit-list {
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+}
+
+.audit-row__action {
+  font-weight: 600;
+  margin-right: 10px;
+}
+
+.audit-row__actor {
+  margin-right: 10px;
+}
+
+.audit-row__time {
+  font-size: 12px;
+}
+
+.audit-row__params {
+  margin: 0 0 8px 30px;
+  font-size: 12px;
+  max-height: 200px;
+  overflow: auto;
+}
+
+.property-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.property-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 16px;
+  border-bottom: 1px solid var(--light-gray2);
+}
+
+.property-row:last-child {
+  border-bottom: none;
+}
+
+.property-row__type {
+  flex: none;
+  min-width: 68px;
+  justify-content: center;
+}
+
+.property-row__body {
+  min-width: 0;
+}
+
+.property-row__name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  font-weight: 500;
+}
+
+.property-row__meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  margin-top: 2px;
+}
+

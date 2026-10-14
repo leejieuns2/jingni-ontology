@@ -10,10 +10,15 @@
   "scripts": {
     "dev": "pnpm --filter @jingni/ontology dev",
     "start": "pnpm --filter @jingni/ontology start",
+    "run-sql": "node --env-file=.env run-sql.ts",
     "typecheck": "pnpm -r --parallel typecheck"
   },
   "devDependencies": {
     "@types/node": "^26.4.1",
+    "@types/pg": "^8.23.1",
     "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "pg": "^8.23.0"
   }
 }

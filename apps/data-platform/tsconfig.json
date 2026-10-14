@@ -1,0 +1,12 @@
+{
+  // Extends the workspace base (see tsconfig.base.json) and adds what a browser
+  // bundle needs: JSX, the DOM libs, and Vite's ambient module types (which is
+  // what makes `import "...css"` type-check).
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "lib": ["es2024", "dom", "dom.iterable"],
+    "types": ["node", "vite/client"]
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "vite.config.ts"]
+}
