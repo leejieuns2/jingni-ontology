@@ -29,9 +29,9 @@ export type ActionHandler = (
 
 /** A rejected business rule. The route maps this onto an HTTP status. */
 export class ActionError extends Error {
-  readonly status: 400 | 404 | 409;
+  readonly status: 400 | 404 | 409 | 502;
 
-  constructor(status: 400 | 404 | 409, message: string) {
+  constructor(status: 400 | 404 | 409 | 502, message: string) {
     super(message);
     this.name = "ActionError";
     this.status = status;
