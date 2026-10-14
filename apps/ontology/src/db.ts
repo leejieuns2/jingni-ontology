@@ -97,6 +97,8 @@ type ActionTypeTable = {
   description: string | null;
   /** JSON Schema for the action's parameters. */
   parameter_schema: JsonObject | null;
+  /** Caller identities allowed to invoke; null or empty means unrestricted. */
+  allowed_callers: string[] | null;
 };
 
 // Dual snapshot: the UUIDs keep the trail joinable to live metadata, the
@@ -115,6 +117,20 @@ type AuditLogTable = {
   /** Proposal id when the action was run on behalf of an approved proposal. */
   authorized_by_proposal: string | null;
   created_at: Generated<Date>;
+};
+
+// One row per access decision on the action route — allowed and denied alike,
+// so an investigation can see attempts, not just successes. Schema-agnostic
+// like audit_log: bind to the active schema with withSchema.
+type AccessLogTable = {
+  id: Generated<string>;
+  caller_identity: string;
+  action_type: string;
+  target_type: string;
+  target_id: string;
+  decision: "allowed" | "denied";
+  reason: string | null;
+  timestamp: Generated<Date>;
 };
 
 // ---------------------------------------------------------------------------
@@ -290,6 +306,7 @@ export interface Database {
   link: LinkTable;
   action_type: ActionTypeTable;
   audit_log: AuditLogTable;
+  access_log: AccessLogTable;
   proposal: ProposalTable;
 
   // Instances

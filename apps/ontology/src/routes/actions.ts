@@ -9,6 +9,7 @@ import {
   datasourceOf,
   findActionType,
   loadProperties,
+  meta,
   primaryKeyColumn,
   projectRow,
   requireObjectType,
@@ -37,6 +38,37 @@ actionRoutes.post("/:type/:id/actions/:actionName", async (c) => {
     });
   }
 
+  // Access check, before the body is even validated. An unidentified caller is
+  // checked as "system" — absence of a header is not a free pass. Both outcomes
+  // are logged: an investigation needs to see attempts, not just successes.
+  const headerIdentity = c.req.header("x-caller-identity");
+  const accessIdentity = headerIdentity ?? "system";
+  const restricted = (action.allowed_callers?.length ?? 0) > 0;
+  const allowed = !restricted || action.allowed_callers!.includes(accessIdentity);
+  await meta(db)
+    .insertInto("access_log")
+    .values({
+      caller_identity: accessIdentity,
+      action_type: action.api_name,
+      target_type: type.api_name,
+      target_id: id,
+      decision: allowed ? "allowed" : "denied",
+      reason: !restricted
+        ? "action is unrestricted"
+        : allowed
+          ? "caller is in allowed_callers"
+          : `caller is not in allowed_callers [${action.allowed_callers!.join(", ")}]`,
+      // Explicit rather than the column default: `now()` is the database's
+      // clock, which ignores the COURSE_NOW anchor this process runs on.
+      timestamp: new Date(),
+    })
+    .execute();
+  if (!allowed) {
+    throw new HTTPException(403, {
+      message: `"${accessIdentity}" is not allowed to invoke ${type.api_name}.${action.api_name}`,
+    });
+  }
+
   const params = action.parameter_schema
     ? validateParams(action.parameter_schema, await readBody(c.req.raw), actionName)
     : undefined;
@@ -48,7 +80,7 @@ actionRoutes.post("/:type/:id/actions/:actionName", async (c) => {
     });
   }
 
-  const callerIdentity = c.req.header("x-caller-identity");
+  const callerIdentity = headerIdentity;
   const updated = await handler(instance, params, {
     db,
     action: { id: action.id, apiName: action.api_name },
