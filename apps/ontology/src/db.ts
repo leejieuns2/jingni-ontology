@@ -104,6 +104,8 @@ type AuditLogTable = {
   actor: string;
   params: JsonObject | null;
   result: JsonObject | null;
+  /** Proposal id when the action was run on behalf of an approved proposal. */
+  authorized_by_proposal: string | null;
   created_at: Generated<Date>;
 };
 
@@ -190,6 +192,21 @@ type MaintenanceLogTable = {
   notes: string | null;
 };
 
+type ProposalTable = {
+  id: Generated<number>;
+  /** Exact handler key of the proposed action, e.g. `batch.cancel`. */
+  type: string;
+  target_id: string;
+  params: JsonObject;
+  rationale: string;
+  status: Generated<string>;
+  proposed_by: string;
+  proposed_at: Generated<Timestamp>;
+  reviewed_by: string | null;
+  reviewed_at: Timestamp | null;
+  decision_note: string | null;
+};
+
 export interface Database {
   // Metadata (address with withSchema)
   object_type: ObjectTypeTable;
@@ -207,6 +224,7 @@ export interface Database {
   "manufacturing.bottling_run": BottlingRunTable;
   "manufacturing.quality_test": QualityTestTable;
   "manufacturing.maintenance_log": MaintenanceLogTable;
+  "manufacturing.proposal": ProposalTable;
 }
 
 export const db = new Kysely<Database>({

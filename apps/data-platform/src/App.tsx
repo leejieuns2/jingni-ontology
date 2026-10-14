@@ -4,13 +4,19 @@ import { listTypes, type ObjectTypeMeta } from "./api.ts";
 import { BatchWorkspace } from "./investigation/BatchWorkspace.tsx";
 import { ObjectExplorer } from "./objectExplorer/ObjectExplorer.tsx";
 import { OntologyManager } from "./ontologyManager/OntologyManager.tsx";
+import { ProposalsQueue } from "./proposals/ProposalsQueue.tsx";
 
-type AppId = "ontology-manager" | "object-explorer" | "batch-investigation";
+type AppId = "ontology-manager" | "object-explorer" | "batch-investigation" | "proposals-queue";
 
-const APPS: { id: AppId; label: string; icon: "cube" | "search-template" | "pulse" }[] = [
+const APPS: {
+  id: AppId;
+  label: string;
+  icon: "cube" | "search-template" | "pulse" | "inbox";
+}[] = [
   { id: "ontology-manager", label: "Ontology Manager", icon: "cube" },
   { id: "object-explorer", label: "Object Explorer", icon: "search-template" },
   { id: "batch-investigation", label: "Batch Investigation", icon: "pulse" },
+  { id: "proposals-queue", label: "Proposals Queue", icon: "inbox" },
 ];
 
 export function App() {
@@ -58,6 +64,7 @@ export function App() {
       )}
       {activeApp === "object-explorer" && <ObjectExplorer types={types} loadError={error} />}
       {activeApp === "batch-investigation" && <BatchWorkspace />}
+      {activeApp === "proposals-queue" && <ProposalsQueue />}
     </div>
   );
 }

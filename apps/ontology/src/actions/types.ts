@@ -11,6 +11,10 @@ export type ActionContext = {
   objectType: { id: string; apiName: string };
   targetId: string;
   actor: string;
+  /** Authenticated caller, from the `x-caller-identity` header when present. */
+  callerIdentity?: string;
+  /** Set when the action runs on behalf of an approved proposal; its id. */
+  authorizedByProposal?: string;
 };
 
 /**

@@ -579,3 +579,23 @@ body {
   margin-top: 2px;
 }
 
+
+/* Proposals Queue */
+.proposal-rationale {
+  max-width: 420px;
+  white-space: pre-wrap;
+}
+.proposal-params dt {
+  font-weight: 600;
+}
+.proposal-params dd {
+  margin: 0 0 4px;
+}
+.proposal-actions {
+  display: flex;
+  gap: 6px;
+}
+.proposal-error {
+  margin-top: 6px;
+  max-width: 260px;
+}

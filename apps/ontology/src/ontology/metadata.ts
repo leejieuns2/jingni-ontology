@@ -317,6 +317,32 @@ export async function selectRows(
   return rows;
 }
 
+/**
+ * Inserts one row and returns it as stored. Same identifier containment as
+ * `selectRows`: every column name came from a `property.datasource_column` the
+ * caller looked up in metadata, and every value is a bound parameter.
+ */
+export async function insertRow(
+  db: Kysely<Database>,
+  ds: Datasource,
+  assignments: { column: string; value: unknown }[],
+): Promise<Record<string, unknown>> {
+  const columns = assignments.map((a) => sql.id(a.column));
+  const values = assignments.map((a) => sql`${a.value}`);
+
+  const { rows } = await sql<Record<string, unknown>>`
+    insert into ${sql.id(ds.schema, ds.table)} (${sql.join(columns, sql`, `)})
+    values (${sql.join(values, sql`, `)})
+    returning *
+  `.execute(db);
+
+  const row = rows[0];
+  if (!row) {
+    throw new HTTPException(500, { message: "Insert returned no row" });
+  }
+  return row;
+}
+
 /** How many instances a type has. Same identifier containment as `selectRows`. */
 export async function countRows(db: Kysely<Database>, ds: Datasource): Promise<number> {
   const { rows } = await sql<{ count: number }>`

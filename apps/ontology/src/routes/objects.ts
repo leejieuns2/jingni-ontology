@@ -8,6 +8,7 @@ import {
   datasourceOf,
   eq,
   FILTER_OPS,
+  insertRow,
   loadLinks,
   loadProperties,
   meta,
@@ -49,6 +50,74 @@ objectRoutes.get("/:type", async (c) => {
     count: rows.length,
     data: rows.map((row) => projectRow(properties, row)),
   });
+});
+
+/**
+ * POST /:type — create one instance.
+ *
+ * Generic the same way the reads are: the writable surface is the type's declared
+ * properties, validated here against metadata — unknown keys are refused, required
+ * properties must be present. The primary key is exempt from the required check
+ * because it may be database-generated (proposal ids are); a caller that supplies
+ * one anyway finds out from the database, not from us.
+ */
+objectRoutes.post("/:type", async (c) => {
+  const type = await requireObjectType(db, c.req.param("type"));
+  const ds = datasourceOf(type);
+  const properties = await loadProperties(db, type.id);
+
+  const body = await readCreateBody(c.req.raw);
+
+  const byApiName = new Map(properties.map((p) => [p.api_name, p]));
+  const unknown = Object.keys(body).filter((key) => !byApiName.has(key));
+  if (unknown.length > 0) {
+    throw new HTTPException(400, {
+      message: `Not propert${unknown.length === 1 ? "y" : "ies"} of ${type.api_name}: ${unknown.join(", ")}`,
+    });
+  }
+
+  const assignments: { column: string; value: unknown }[] = [];
+  for (const property of properties) {
+    const provided =
+      Object.hasOwn(body, property.api_name) && body[property.api_name] !== undefined;
+    const value = body[property.api_name];
+
+    if (!provided) {
+      if (property.required && !property.is_primary_key) {
+        throw new HTTPException(400, {
+          message: `Missing required property "${property.api_name}"`,
+        });
+      }
+      continue;
+    }
+    if (value === null && property.required) {
+      throw new HTTPException(400, {
+        message: `Property "${property.api_name}" is required and cannot be null`,
+      });
+    }
+    if (!property.datasource_column) continue;
+
+    assignments.push({
+      column: property.datasource_column,
+      // jsonb wants serialised JSON; left raw, the pg driver would turn a JS
+      // array into a Postgres array literal and the insert would fail.
+      value: property.data_type === "json" && value !== null ? JSON.stringify(value) : value,
+    });
+  }
+
+  let row: Record<string, unknown>;
+  try {
+    row = await insertRow(db, ds, assignments);
+  } catch (cause) {
+    if (cause instanceof HTTPException) throw cause;
+    // Constraint violations (CHECK, FK, generated columns) surface as caller
+    // errors with the database's message, which names the constraint.
+    throw new HTTPException(400, {
+      message: cause instanceof Error ? cause.message : "Insert failed",
+    });
+  }
+
+  return c.json({ type: type.api_name, properties: projectRow(properties, row) }, 201);
 });
 
 /**
@@ -152,6 +221,20 @@ objectRoutes.get("/:type/:id/audit", async (c) => {
 
   return c.json({ type: type.api_name, id, count: data.length, data });
 });
+
+/** Parses the body of POST /:type: a JSON object keyed by property api_names. */
+async function readCreateBody(request: Request): Promise<Record<string, unknown>> {
+  let body: unknown;
+  try {
+    body = JSON.parse(await request.text());
+  } catch {
+    throw new HTTPException(400, { message: "Request body is not valid JSON" });
+  }
+  if (typeof body !== "object" || body === null || Array.isArray(body)) {
+    throw new HTTPException(400, { message: "Request body must be a JSON object" });
+  }
+  return body as Record<string, unknown>;
+}
 
 /** Rows returned when the caller names no `limit`. */
 const DEFAULT_LIMIT = 100;

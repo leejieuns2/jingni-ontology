@@ -56,7 +56,8 @@ export async function batchDeferStart(
         target_type_id: ctx.objectType.id,
         target_type_api_name: ctx.objectType.apiName,
         target_id: batch.id,
-        actor: ctx.actor,
+        actor: ctx.callerIdentity ?? "system",
+        authorized_by_proposal: ctx.authorizedByProposal ?? null,
         // Explicit rather than the column default: `now()` is the database's
         // clock, which ignores the COURSE_NOW anchor this process runs on.
         created_at: new Date(),

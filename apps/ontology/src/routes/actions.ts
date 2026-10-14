@@ -48,6 +48,7 @@ actionRoutes.post("/:type/:id/actions/:actionName", async (c) => {
     });
   }
 
+  const callerIdentity = c.req.header("x-caller-identity");
   const updated = await handler(instance, params, {
     db,
     action: { id: action.id, apiName: action.api_name },
@@ -55,7 +56,8 @@ actionRoutes.post("/:type/:id/actions/:actionName", async (c) => {
     targetId: id,
     // audit_log.actor is NOT NULL: every action is attributed to someone, and an
     // unidentified caller is recorded as such rather than as a missing value.
-    actor: c.req.header("x-actor") ?? "unknown",
+    actor: callerIdentity ?? "unknown",
+    ...(callerIdentity !== undefined && { callerIdentity }),
   });
 
   return c.json({

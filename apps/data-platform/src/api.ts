@@ -120,7 +120,9 @@ export type ActionResult = {
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(
     path,
-    init?.body ? { ...init, headers: { "content-type": "application/json" } } : init,
+    init?.body
+      ? { ...init, headers: { "content-type": "application/json", ...init.headers } }
+      : init,
   );
 
   const payload: unknown = await response.json().catch(() => null);
@@ -171,6 +173,25 @@ export function listAudit(apiName: string, id: string): Promise<AuditList> {
 
 export function getInstance(apiName: string, id: string): Promise<InstanceDetail> {
   return request(`/api/objects/${encodeURIComponent(apiName)}/${encodeURIComponent(id)}`);
+}
+
+/**
+ * Approve or reject a proposal. The decision travels with a caller identity so
+ * the audit trail records who clicked, not an anonymous browser.
+ */
+export function decideProposal(
+  id: number,
+  decision: "approve" | "reject",
+  decisionNote?: string,
+): Promise<ActionResult> {
+  return request(`/api/objects/proposal/${id}/actions/${decision}`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-caller-identity": "brewmaster-lee",
+    },
+    body: JSON.stringify(decisionNote ? { decisionNote } : {}),
+  });
 }
 
 export function invokeAction(
