@@ -232,6 +232,57 @@ type ProposalTable = {
   decision_note: string | null;
 };
 
+// ---------------------------------------------------------------------------
+// Insurance instance tables — the handlers under actions/insurance work with
+// these. Mirrors insurance-base.sql.
+// ---------------------------------------------------------------------------
+
+type PolicyTable = {
+  id: string;
+  policy_number: string;
+  customer_id: string | null;
+  template_id: string | null;
+  start_date: Timestamp | null;
+  end_date: Timestamp | null;
+  premium: number | null;
+  status: string;
+  driver_scope: string | null;
+  reporting_window_days: number | null;
+};
+
+type ClaimTable = {
+  id: string;
+  claim_number: string;
+  policy_id: string | null;
+  customer_id: string | null;
+  incident_date: Timestamp | null;
+  filed_date: Timestamp | null;
+  claim_type: string | null;
+  amount_claimed: number | null;
+  status: string;
+  narrative: string | null;
+  documents_complete: boolean | null;
+};
+
+type CoverageClauseTable = {
+  id: string;
+  policy_template_id: string | null;
+  policy_id: string | null;
+  effect: string;
+  category: string | null;
+  text: string | null;
+  overrides_clause_id: string | null;
+  limit_amount: number | null;
+  deductible_amount: number | null;
+};
+
+type DataIssueTable = {
+  id: string;
+  claim_id: string | null;
+  reason: string;
+  status: Generated<string>;
+};
+
 export interface Database {
   // Metadata (address with withSchema)
   object_type: ObjectTypeTable;
@@ -251,6 +302,11 @@ export interface Database {
   "manufacturing.quality_test": QualityTestTable;
   "manufacturing.maintenance_log": MaintenanceLogTable;
   "manufacturing.flag_log": FlagLogTable;
+
+  "insurance.policy": PolicyTable;
+  "insurance.claim": ClaimTable;
+  "insurance.coverage_clause": CoverageClauseTable;
+  "insurance.data_issue": DataIssueTable;
 }
 
 export const db = new Kysely<Database>({
