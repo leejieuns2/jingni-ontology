@@ -5,8 +5,10 @@
 // assertion holds because the route resolves a handler only after matching the
 // instance's object type and validating the params against parameter_schema.
 import { batchDeferStart } from "./manufacturing/batchDeferStart.ts";
+import { tankScheduleMaintenance } from "./manufacturing/tankScheduleMaintenance.ts";
 import type { ActionHandler } from "./types.ts";
 
 export const actionHandlers: Record<string, ActionHandler> = {
   "batch.deferStart": batchDeferStart as unknown as ActionHandler,
+  "tank.scheduleMaintenance": tankScheduleMaintenance as unknown as ActionHandler,
 };

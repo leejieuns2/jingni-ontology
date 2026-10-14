@@ -184,6 +184,7 @@ type MaintenanceLogTable = {
   target_id: string;
   type: string;
   status: string;
+  planned_at: Timestamp | null;
   started_at: Timestamp | null;
   completed_at: Timestamp | null;
   notes: string | null;
