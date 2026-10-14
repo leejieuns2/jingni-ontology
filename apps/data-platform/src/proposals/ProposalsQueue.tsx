@@ -6,6 +6,7 @@ import {
   Button,
   Callout,
   H2,
+  H3,
   HTMLTable,
   NonIdealState,
   Spinner,
@@ -23,6 +24,8 @@ type Proposal = {
   status: string;
   proposedBy: string;
   proposedAt: string;
+  /** Carries the escalation note while a proposal sits in the escalated lane. */
+  decisionNote: string | null;
 };
 
 export function ProposalsQueue() {
@@ -35,8 +38,12 @@ export function ProposalsQueue() {
 
   async function reload() {
     try {
-      const { data } = await listInstances("proposal", { status: "pending" });
-      setProposals((data as Instance[]).map(toProposal));
+      const { data } = await listInstances("proposal");
+      setProposals(
+        (data as Instance[])
+          .map(toProposal)
+          .filter((p) => p.status === "pending" || p.status === "escalated"),
+      );
       setLoadError(null);
     } catch (cause) {
       setLoadError(messageOf(cause));
@@ -61,6 +68,9 @@ export function ProposalsQueue() {
     }
   }
 
+  const pending = proposals?.filter((p) => p.status === "pending") ?? [];
+  const escalated = proposals?.filter((p) => p.status === "escalated") ?? [];
+
   return (
     <main className="page">
       <header className="list-header">
@@ -83,77 +93,132 @@ export function ProposalsQueue() {
       ) : proposals.length === 0 ? (
         <NonIdealState
           icon="inbox"
-          title="No pending proposals"
+          title="No open proposals"
           description="Agent proposals awaiting review will appear here."
         />
       ) : (
-        <HTMLTable className="data-table" striped>
-          <thead>
-            <tr>
-              <th>Type</th>
-              <th>Target</th>
-              <th>Proposed By</th>
-              <th>Proposed At</th>
-              <th>Rationale</th>
-              <th>Parameters</th>
-              <th>Status</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {proposals.map((proposal) => (
-              <tr key={proposal.id}>
-                <td>
-                  <code>{proposal.type}</code>
-                </td>
-                <td>{proposal.targetId}</td>
-                <td>{proposal.proposedBy}</td>
-                <td>{new Date(proposal.proposedAt).toLocaleString()}</td>
-                <td className="proposal-rationale">{proposal.rationale}</td>
-                <td>
-                  <dl className="proposal-params">
-                    {Object.entries(proposal.params).map(([key, value]) => (
-                      <div key={key}>
-                        <dt>{key}</dt>
-                        <dd>{String(value)}</dd>
-                      </div>
-                    ))}
-                  </dl>
-                </td>
-                <td>
-                  <Tag minimal>{proposal.status}</Tag>
-                </td>
-                <td>
-                  <div className="proposal-actions">
-                    <Button
-                      small
-                      intent="success"
-                      text="Approve"
-                      disabled={busy !== null}
-                      loading={busy === proposal.id}
-                      onClick={() => void decide(proposal.id, "approve")}
-                    />
-                    <Button
-                      small
-                      intent="danger"
-                      variant="outlined"
-                      text="Reject"
-                      disabled={busy !== null}
-                      onClick={() => void decide(proposal.id, "reject")}
-                    />
-                  </div>
-                  {rowErrors[proposal.id] && (
-                    <Callout intent="danger" compact className="proposal-error">
-                      {rowErrors[proposal.id]}
-                    </Callout>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </HTMLTable>
+        <>
+          {escalated.length > 0 && (
+            <Lane
+              title="Escalated"
+              intent="warning"
+              proposals={escalated}
+              busy={busy}
+              rowErrors={rowErrors}
+              onDecide={decide}
+            />
+          )}
+          <Lane
+            title="Pending"
+            proposals={pending}
+            busy={busy}
+            rowErrors={rowErrors}
+            onDecide={decide}
+          />
+        </>
       )}
     </main>
+  );
+}
+
+function Lane({
+  title,
+  intent,
+  proposals,
+  busy,
+  rowErrors,
+  onDecide,
+}: {
+  title: string;
+  intent?: "warning";
+  proposals: Proposal[];
+  busy: number | null;
+  rowErrors: Record<number, string>;
+  onDecide: (id: number, decision: "approve" | "reject") => Promise<void>;
+}) {
+  return (
+    <section className="proposal-lane">
+      <H3 className="proposal-lane__title">
+        {title}
+        <Tag minimal round {...(intent ? { intent } : {})}>
+          {proposals.length}
+        </Tag>
+      </H3>
+      <HTMLTable className="data-table" striped>
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Target</th>
+            <th>Proposed By</th>
+            <th>Proposed At</th>
+            <th>Rationale</th>
+            <th>Parameters</th>
+            <th>Status</th>
+            <th />
+          </tr>
+        </thead>
+        <tbody>
+          {proposals.map((proposal) => (
+            <tr key={proposal.id}>
+              <td>
+                <code>{proposal.type}</code>
+              </td>
+              <td>{proposal.targetId}</td>
+              <td>{proposal.proposedBy}</td>
+              <td>{new Date(proposal.proposedAt).toLocaleString()}</td>
+              <td className="proposal-rationale">
+                {proposal.rationale}
+                {proposal.status === "escalated" && proposal.decisionNote && (
+                  <Callout intent="warning" compact className="proposal-error">
+                    Escalation: {proposal.decisionNote}
+                  </Callout>
+                )}
+              </td>
+              <td>
+                <dl className="proposal-params">
+                  {Object.entries(proposal.params).map(([key, value]) => (
+                    <div key={key}>
+                      <dt>{key}</dt>
+                      <dd>{String(value)}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </td>
+              <td>
+                <Tag minimal intent={proposal.status === "escalated" ? "warning" : "none"}>
+                  {proposal.status}
+                </Tag>
+              </td>
+              <td>
+                <div className="proposal-actions">
+                  <Button
+                    small
+                    intent="success"
+                    text="Approve"
+                    disabled={busy !== null}
+                    loading={busy === proposal.id}
+                    onClick={() => void onDecide(proposal.id, "approve")}
+                  />
+                  <Button
+                    small
+                    intent="danger"
+                    variant="outlined"
+                    text="Reject"
+                    disabled={busy !== null}
+                    onClick={() => void onDecide(proposal.id, "reject")}
+                  />
+                </div>
+                {rowErrors[proposal.id] && (
+                  <Callout intent="danger" compact className="proposal-error">
+                    {rowErrors[proposal.id]}
+                  </Callout>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </HTMLTable>
+    </section>
   );
 }
 
@@ -167,6 +232,7 @@ function toProposal(instance: Instance): Proposal {
     status: String(instance["status"]),
     proposedBy: String(instance["proposedBy"] ?? ""),
     proposedAt: String(instance["proposedAt"] ?? ""),
+    decisionNote: instance["decisionNote"] == null ? null : String(instance["decisionNote"]),
   };
 }
 

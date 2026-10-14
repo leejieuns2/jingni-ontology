@@ -152,6 +152,7 @@ type BatchTable = {
   target_volume: number | null;
   status: string;
   planned_start: Timestamp | null;
+  planned_transfer_at: Timestamp | null;
   current_sugar_level: number | null;
   current_temperature: number | null;
   days_fermenting: number | null;
@@ -192,6 +193,17 @@ type MaintenanceLogTable = {
   notes: string | null;
 };
 
+type FlagLogTable = {
+  id: string;
+  batch_id: string | null;
+  reason: string;
+  severity: string;
+  status: Generated<string>;
+  flagged_by: string | null;
+  flagged_at: Timestamp | null;
+  resolved_at: Timestamp | null;
+};
+
 type ProposalTable = {
   id: Generated<number>;
   /** Exact handler key of the proposed action, e.g. `batch.cancel`. */
@@ -225,6 +237,7 @@ export interface Database {
   "manufacturing.quality_test": QualityTestTable;
   "manufacturing.maintenance_log": MaintenanceLogTable;
   "manufacturing.proposal": ProposalTable;
+  "manufacturing.flag_log": FlagLogTable;
 }
 
 export const db = new Kysely<Database>({

@@ -579,7 +579,6 @@ body {
   margin-top: 2px;
 }
 
-
 /* Proposals Queue */
 .proposal-rationale {
   max-width: 420px;
@@ -598,4 +597,12 @@ body {
 .proposal-error {
   margin-top: 6px;
   max-width: 260px;
+}
+.proposal-lane {
+  margin-bottom: 24px;
+}
+.proposal-lane__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }

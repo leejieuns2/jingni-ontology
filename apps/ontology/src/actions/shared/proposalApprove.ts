@@ -25,10 +25,12 @@ export async function proposalApprove(
   params: DecisionParams | undefined,
   ctx: ActionContext,
 ): Promise<Proposal> {
-  if (proposal.status !== "pending") {
+  // Escalated proposals stay approvable: escalation parks a decision for a
+  // human, it does not retire the proposal.
+  if (proposal.status !== "pending" && proposal.status !== "escalated") {
     throw new ActionError(
       409,
-      `Proposal ${proposal.id} is "${proposal.status}"; only a pending proposal can be approved`,
+      `Proposal ${proposal.id} is "${proposal.status}"; only a pending or escalated proposal can be approved`,
     );
   }
 
