@@ -14,7 +14,7 @@ pg.types.setTypeParser(pg.types.builtins.NUMERIC, Number);
  * carries the same metadata tables (plus `proposal`), so flipping this value to
  * another schema (e.g. "insurance") repoints the whole generic surface at once.
  */
-export const ACTIVE_ONTOLOGY_SCHEMA = "manufacturing";
+export const ACTIVE_ONTOLOGY_SCHEMA = "insurance";
 
 const connectionString = process.env["DATABASE_URL"];
 if (!connectionString) {
