@@ -9,7 +9,7 @@ import type { Database } from "../../db.ts";
 import { METADATA_SCHEMA } from "../../ontology/metadata.ts";
 import { ActionError, type ActionContext } from "../types.ts";
 
-type Proposal = Selectable<Database["manufacturing.proposal"]>;
+type Proposal = Selectable<Database["proposal"]>;
 
 type EscalateParams = {
   note: string;
@@ -36,7 +36,8 @@ export async function proposalEscalate(
   // eventually approves or rejects will fill them.
   return await ctx.db.transaction().execute(async (trx) => {
     const updated = await trx
-      .updateTable("manufacturing.proposal")
+      .withSchema(METADATA_SCHEMA)
+      .updateTable("proposal")
       .set({
         status: "escalated",
         decision_note: params.note,

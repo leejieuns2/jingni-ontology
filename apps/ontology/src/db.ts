@@ -8,6 +8,14 @@ import pg from "pg";
 // (gravities, temperatures, volumes) are all well inside float precision.
 pg.types.setTypeParser(pg.types.builtins.NUMERIC, Number);
 
+/**
+ * The ontology this service serves. The single switch: metadata, object, and
+ * action routes expose and query only this schema. Every ontology schema
+ * carries the same metadata tables (plus `proposal`), so flipping this value to
+ * another schema (e.g. "insurance") repoints the whole generic surface at once.
+ */
+export const ACTIVE_ONTOLOGY_SCHEMA = "manufacturing";
+
 const connectionString = process.env["DATABASE_URL"];
 if (!connectionString) {
   throw new Error("DATABASE_URL is not set (expected in .env at the repo root)");
@@ -204,6 +212,11 @@ type FlagLogTable = {
   resolved_at: Timestamp | null;
 };
 
+/**
+ * Like the metadata tables, deliberately NOT schema-prefixed: every ontology
+ * schema carries a `proposal` table with this identical shape, so the shared
+ * proposal actions bind it to the active schema with `withSchema(...)`.
+ */
 type ProposalTable = {
   id: Generated<number>;
   /** Exact handler key of the proposed action, e.g. `batch.cancel`. */
@@ -226,6 +239,7 @@ export interface Database {
   link: LinkTable;
   action_type: ActionTypeTable;
   audit_log: AuditLogTable;
+  proposal: ProposalTable;
 
   // Instances
   "manufacturing.tank": TankTable;
@@ -236,7 +250,6 @@ export interface Database {
   "manufacturing.bottling_run": BottlingRunTable;
   "manufacturing.quality_test": QualityTestTable;
   "manufacturing.maintenance_log": MaintenanceLogTable;
-  "manufacturing.proposal": ProposalTable;
   "manufacturing.flag_log": FlagLogTable;
 }
 

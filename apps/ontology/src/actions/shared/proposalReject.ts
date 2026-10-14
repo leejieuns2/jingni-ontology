@@ -7,7 +7,7 @@ import type { Database } from "../../db.ts";
 import { METADATA_SCHEMA } from "../../ontology/metadata.ts";
 import { ActionError, type ActionContext } from "../types.ts";
 
-type Proposal = Selectable<Database["manufacturing.proposal"]>;
+type Proposal = Selectable<Database["proposal"]>;
 
 type DecisionParams = {
   decisionNote?: string;
@@ -34,7 +34,8 @@ export async function proposalReject(
   // The update and its audit row land together or not at all.
   return await ctx.db.transaction().execute(async (trx) => {
     const updated = await trx
-      .updateTable("manufacturing.proposal")
+      .withSchema(METADATA_SCHEMA)
+      .updateTable("proposal")
       .set({
         status: "rejected",
         reviewed_by: reviewer,

@@ -14,7 +14,7 @@ import { METADATA_SCHEMA } from "../../ontology/metadata.ts";
 import { dispatchAction } from "../dispatch.ts";
 import { ActionError, type ActionContext } from "../types.ts";
 
-type Proposal = Selectable<Database["manufacturing.proposal"]>;
+type Proposal = Selectable<Database["proposal"]>;
 
 type DecisionParams = {
   decisionNote?: string;
@@ -53,7 +53,8 @@ export async function proposalApprove(
   //    decision itself, atomically.
   return await ctx.db.transaction().execute(async (trx) => {
     const updated = await trx
-      .updateTable("manufacturing.proposal")
+      .withSchema(METADATA_SCHEMA)
+      .updateTable("proposal")
       .set({
         status: "approved",
         reviewed_by: reviewer,

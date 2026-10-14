@@ -4,17 +4,18 @@
 // and `selectRows` for how that is contained.
 import { HTTPException } from "hono/http-exception";
 import { sql, type Kysely, type RawBuilder, type Selectable } from "kysely";
-import type { Database } from "../db.ts";
+import { ACTIVE_ONTOLOGY_SCHEMA, type Database } from "../db.ts";
 
 /** The schema whose metadata tables describe this service's ontology. */
-export const METADATA_SCHEMA = "manufacturing";
+export const METADATA_SCHEMA = ACTIVE_ONTOLOGY_SCHEMA;
 
 /**
- * Schemas this service is allowed to read instance tables from. A `schema` value
- * that reached us from metadata is still checked against this list before it is
- * ever put into SQL.
+ * Schemas this service is allowed to read instance tables from — derived from
+ * the active schema, so flipping ACTIVE_ONTOLOGY_SCHEMA repoints everything. A
+ * `schema` value that reached us from metadata is still checked against this
+ * list before it is ever put into SQL.
  */
-const INSTANCE_SCHEMAS = new Set(["manufacturing"]);
+const INSTANCE_SCHEMAS = new Set([ACTIVE_ONTOLOGY_SCHEMA]);
 
 /** Metadata tables are schema-agnostic in `Database`; bind them to a schema. */
 export function meta(db: Kysely<Database>): Kysely<Database> {
