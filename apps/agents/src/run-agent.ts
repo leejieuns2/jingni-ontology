@@ -8,20 +8,22 @@ import { execSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { createSdkMcpServer, type Options, type PermissionResult } from "@anthropic-ai/claude-agent-sdk";
+import {
+  createSdkMcpServer,
+  type Options,
+  type PermissionResult,
+  type SdkMcpToolDefinition,
+} from "@anthropic-ai/claude-agent-sdk";
 import { trace } from "@opentelemetry/api";
 import { startEventServer, type AgentEvent } from "./event-server.ts";
 import { buildSchemaBlock } from "./helpers/buildSchemaBlock.ts";
-import { getObject } from "./tools/shared/getObject.ts";
 import { ontologyUrl } from "./tools/shared/http.ts";
-import { queryObjects } from "./tools/shared/queryObjects.ts";
 import { initTracing, TRACER_NAME } from "./tracing.ts";
 
 const VIEW_PORT = 3455;
 const SERVER_NAME = "ontology";
 
-/** Tools the agent may call, and the only prefix `canUseTool` will approve. */
-const TOOLS = [queryObjects, getObject];
+/** The only prefix `canUseTool` will approve. */
 const TOOL_PREFIX = `mcp__${SERVER_NAME}__`;
 
 /**
@@ -35,11 +37,13 @@ export type RunAgentInput = {
   /** Names the Langfuse trace and travels to the ontology as `x-caller-identity`. */
   identity: string;
   prompt: string;
+  /** The agent's whole tool surface; the MCP server and allow-list are built from it. */
+  tools: SdkMcpToolDefinition<any>[];
   /** Merged over the defaults; `mcpServers` and the permission fields are fixed. */
   options?: Omit<Options, "mcpServers" | "canUseTool" | "disallowedTools">;
 };
 
-export async function runAgent({ identity, prompt, options }: RunAgentInput): Promise<void> {
+export async function runAgent({ identity, prompt, tools, options }: RunAgentInput): Promise<void> {
   installIdentityHeader(identity);
 
   const { query, enabled: traced, shutdown } = initTracing();
@@ -66,7 +70,7 @@ export async function runAgent({ identity, prompt, options }: RunAgentInput): Pr
         for await (const message of query({
           prompt: fullPrompt,
           options: {
-            ...agentOptions(),
+            ...agentOptions(tools),
             ...options,
             // Computed after the spread so a caller's own systemPrompt is composed
             // with the schema rather than replacing it.
@@ -93,14 +97,14 @@ export async function runAgent({ identity, prompt, options }: RunAgentInput): Pr
 // Options
 // ---------------------------------------------------------------------------
 
-function agentOptions(): Options {
+function agentOptions(tools: SdkMcpToolDefinition<any>[]): Options {
   return {
     model: "claude-opus-5",
     mcpServers: {
       [SERVER_NAME]: createSdkMcpServer({
         name: SERVER_NAME,
         version: "0.0.0",
-        tools: TOOLS,
+        tools,
         // Otherwise the tools sit behind ToolSearch and the agent spends turns
         // discovering what it already has.
         alwaysLoad: true,
@@ -117,8 +121,8 @@ function agentOptions(): Options {
     env: { ...process.env, ...bedrockCredentialEnv() },
     // Our own tools run unattended; anything else is refused rather than queued for
     // a human who is not watching.
-    allowedTools: TOOLS.map((tool) => `${TOOL_PREFIX}${tool.name}`),
-    canUseTool: approveOwnToolsOnly,
+    allowedTools: tools.map((tool) => `${TOOL_PREFIX}${tool.name}`),
+    canUseTool: approveOwnToolsOnly(tools),
   };
 }
 
@@ -129,15 +133,17 @@ function agentOptions(): Options {
  * server is denied outright — a non-interactive run has nobody to ask, so a prompt
  * would just hang until the turn limit.
  */
-const approveOwnToolsOnly = async (toolName: string, input: Record<string, unknown>) =>
-  (toolName.startsWith(TOOL_PREFIX)
-    ? { behavior: "allow", updatedInput: input }
-    : {
-        behavior: "deny",
-        message:
-          `${toolName} is not available. Use the ${SERVER_NAME} tools ` +
-          `(${TOOLS.map((tool) => tool.name).join(", ")}) instead.`,
-      }) satisfies PermissionResult;
+const approveOwnToolsOnly =
+  (tools: SdkMcpToolDefinition<any>[]) =>
+  async (toolName: string, input: Record<string, unknown>) =>
+    (toolName.startsWith(TOOL_PREFIX)
+      ? { behavior: "allow", updatedInput: input }
+      : {
+          behavior: "deny",
+          message:
+            `${toolName} is not available. Use the ${SERVER_NAME} tools ` +
+            `(${tools.map((tool) => tool.name).join(", ")}) instead.`,
+        }) satisfies PermissionResult;
 
 // ---------------------------------------------------------------------------
 // Prompt preamble
