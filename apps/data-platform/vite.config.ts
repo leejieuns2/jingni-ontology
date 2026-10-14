@@ -11,7 +11,7 @@ export default defineConfig({
     // The ontology API runs separately (pnpm --filter @jingni/ontology dev).
     // Proxying keeps the browser on one origin, so no CORS setup is needed.
     proxy: {
-      "/api": "http://localhost:3000",
+      "/api": "http://localhost:3456",
     },
   },
 });
